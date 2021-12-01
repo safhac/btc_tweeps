@@ -17,7 +17,7 @@ QUERY_STRING = "$BTC" + " -filter:retweets"
 async def get_json_parsed_data(url: str) -> str:
     response = urlopen(url)
     data = response.read().decode("utf-8")
-    yield json.loads(data)
+    return json.loads(data)
 
 
 async def main():
