@@ -14,17 +14,16 @@ ACCESS_TOKEN_SECRET = "ubqTldQLx7atDcXUwUlWJ8lLqx1wWkrkCKud97n6PswpN"
 QUERY_STRING = "$BTC" + " -filter:retweets"
 
 
-def get_json_parsed_data(url: str) -> str:
+async def get_json_parsed_data(url: str) -> str:
     response = urlopen(url)
     data = response.read().decode("utf-8")
     return json.loads(data)
 
 
-
 async def main():
     print("Welcome to crypto twitter sentiment tracker")
 
-    parsed_data = get_json_parsed_data(URL)[0]
+    parsed_data = (await get_json_parsed_data(URL))[0]
     price = parsed_data["price"]
 
     print("bitcoin price: " + str(price))
@@ -34,12 +33,15 @@ async def main():
     auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     twitter_api = tweepy.API(auth)
 
-    tweets = twitter_api.search_tweets(q=QUERY_STRING, result_type="recent", count=100, tweet_mode='extended')
+    tweets = twitter_api.search_tweets(
+        q=QUERY_STRING,
+        result_type="recent",
+        count=100,
+        tweet_mode='extended'
+    )
+
     print(tweets[0])
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
