@@ -1,6 +1,8 @@
 import asyncio
 import json
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import List
 from urllib.request import urlopen
 import tweepy  # using version 4.1.0
 
@@ -20,6 +22,14 @@ ACCESS_TOKEN_SECRET = "ubqTldQLx7atDcXUwUlWJ8lLqx1wWkrkCKud97n6PswpN"
 def save_task_results(results: str):
     with open('task_results', 'w') as file:
         file.writelines(results)
+
+
+@dataclass
+class TaskResult:
+    time_stamp: datetime
+    bitcoin_price: float
+    last_min_tweets: List[str]
+    batch_sentiment_score: int
 
 
 class MyTweepyApi:
@@ -67,7 +77,7 @@ class MyTweepyApi:
 
     async def periodic(self) -> None:
         while utc_now() < self.until:
-            results = await asyncio.gather(
+            price, results = await asyncio.gather(
                 self.get_btc_price(),
                 self.get_btc_tweets()
             )
