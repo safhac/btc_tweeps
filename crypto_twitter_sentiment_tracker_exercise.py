@@ -1,13 +1,13 @@
 import asyncio
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, TypeVar
 from urllib.request import urlopen
 import tweepy  # using version 4.1.0
 
 # UTC
-utc_now = lambda: datetime.utcnow()
+utc_now = lambda: datetime.utcnow().replace(tzinfo=timezone.utc)
 
 URL = "https://financialmodelingprep.com/api/v3/quote/BTCUSD?apikey=9c33655ac70d040280297ef04cf3ceff"
 
@@ -30,7 +30,8 @@ def save_task_results(price: float, tweets: List[Tweet]):
 
     sentiments = []
     # filter tweets from the last minute here!
-    last_min_tweets = list(filter(lambda t: t.created_at >  utc_now() - timedelta(minutes=1), tweets))
+    last_minute = utc_now() - timedelta(minutes=1)
+    last_min_tweets = list(filter(lambda t: t.created_at > last_minute, tweets))
     for tweet in last_min_tweets:
         retweets = tweet.retweet_count
         likes = tweet.favorite_count
