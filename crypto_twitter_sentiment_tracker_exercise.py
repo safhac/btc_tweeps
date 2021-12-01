@@ -46,8 +46,10 @@ def save_task_results(price: float, tweets: List[Tweet]) -> None:
     tweets_as_json = list(map(lambda t: t._json, last_min_tweets))
 
     t_result = TaskResult(now, price, tweets_as_json, last_min_sentiment)
+
     with open('db.json', 'w') as db:
-        db.writelines(json.dumps(asdict(t_result)))
+
+        db.writelines(json.dumps(asdict(t_result).__str__()))
 
 
 @dataclass
