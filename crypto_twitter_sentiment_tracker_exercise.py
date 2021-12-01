@@ -6,8 +6,6 @@ import tweepy  # using version 4.1.0
 
 # UTC
 utc_now = lambda: datetime.utcnow()
-# YYYY - MM - DDTHH: mm:ssZ
-tweepy_strf = "%Y-%m-%d%H %m:%s"
 
 URL = "https://financialmodelingprep.com/api/v3/quote/BTCUSD?apikey=9c33655ac70d040280297ef04cf3ceff"
 
@@ -60,12 +58,9 @@ class MyTweepyApi:
 
     async def get_btc_tweets(self):
 
-        start = utc_now() - timedelta(minutes=1)
-        end = utc_now()
         return self.api.search_tweets(
             q=self.query,
-            start_time=start.strftime(tweepy_strf),
-            end_time=end.strftime(tweepy_strf),
+            result_type="recent",
             count=100,
             tweet_mode='extended'
         )
@@ -102,6 +97,7 @@ async def main(api: tweepy.API) -> None:
 
 if __name__ == "__main__":
     # Configure tweepy
+
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     api = tweepy.API(auth)
