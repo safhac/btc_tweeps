@@ -57,7 +57,7 @@ class MyTweepyApi:
         return parsed_data["price"]
 
     async def get_btc_tweets(self):
-        return self.api.search_tweets(
+        return self.api.search_recent_tweets(
             q=self.query,
             result_type="recent",
             count=100,
