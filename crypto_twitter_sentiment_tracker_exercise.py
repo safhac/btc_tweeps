@@ -21,28 +21,33 @@ ACCESS_TOKEN_SECRET = "ubqTldQLx7atDcXUwUlWJ8lLqx1wWkrkCKud97n6PswpN"
 Tweet = TypeVar("Tweet")
 
 
-def save_task_results(price: float, tweets: List[Tweet]):
-    # calculate
-    # sentiment = like + 2 * retweet
-    # sum all sentiments
-    # save record format:
-    # time_stamp, bitcoin_price, last_min_tweets, batch_sentiment_score
+def save_task_results(price: float, tweets: List[Tweet]) -> None:
+    """
+    task responsible for calculating and summing up sentiment
+    saving the data into db
+    :param price: btc price as float
+    :param tweets: list of tweepy search_tweets
+    :return:
+    """
 
     sentiments = []
+    now, last_minute = utc_now(), utc_now() - timedelta(minutes=1)
+
     # filter tweets from the last minute here!
-    last_minute = utc_now() - timedelta(minutes=1)
     last_min_tweets = list(filter(lambda t: t.created_at > last_minute, tweets))
+
     for tweet in last_min_tweets:
         retweets = tweet.retweet_count
         likes = tweet.favorite_count
         sentiments.append(likes + retweets * 2)
 
     last_min_sentiment = sum(sentiments) / len(tweets)
+
     tweets_as_json = list(map(lambda t: t._json, last_min_tweets))
-    t_result = TaskResult(utc_now(), price, json.dumps(tweets_as_json), last_min_sentiment)
+
+    t_result = TaskResult(now, price, tweets_as_json, last_min_sentiment)
     with open('db.json', 'w') as db:
         db.writelines(json.dumps(asdict(t_result)))
-
 
 
 @dataclass
