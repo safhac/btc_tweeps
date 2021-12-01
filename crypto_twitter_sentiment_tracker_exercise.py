@@ -2,7 +2,7 @@ import asyncio
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, TypeVar
 from urllib.request import urlopen
 import tweepy  # using version 4.1.0
 
@@ -18,18 +18,38 @@ CONSUMER_SECRET = "pKvBnWNT7Wxr7Z3WwQzhtJ1BlF1cKNw7LEN0597jYsSEE1cCTu"
 ACCESS_TOKEN = "1269644061079674888-NzGrf0MAEVl6fGDSTtpUTYJMNBezvb"
 ACCESS_TOKEN_SECRET = "ubqTldQLx7atDcXUwUlWJ8lLqx1wWkrkCKud97n6PswpN"
 
+Tweet = TypeVar("Tweet")
 
-def save_task_results(results: str):
-    with open('task_results', 'w') as file:
-        file.writelines(results)
+
+def save_task_results(price: float, tweets: List[Tweet]):
+    # calculate
+    # sentiment = like + 2 * retweet
+    # sum all sentiments
+    # save record format:
+    # time_stamp, bitcoin_price, last_min_tweets, batch_sentiment_score
+
+    sentiments = []
+    # filter tweets from the last minute here!
+    last_min_tweets = list(filter(lambda t: t.created_at >  utc_now() - timedelta(minutes=1), tweets))
+    for tweet in last_min_tweets:
+        retweets = tweet.retweet_count
+        likes = tweet.favorite_count
+        sentiments.append(likes + retweets * 2)
+
+    last_min_sentiment = sum(sentiments) / len(tweets)
+    t_result = TaskResult(utc_now(), price, tweets, last_min_sentiment)
+    # TODO: save to a db
 
 
 @dataclass
 class TaskResult:
+    """
+    keep task results tidy
+    """
     time_stamp: datetime
     bitcoin_price: float
-    last_min_tweets: List[str]
-    batch_sentiment_score: int
+    last_min_tweets: List[Tweet]
+    batch_sentiment_score: float
 
 
 class MyTweepyApi:
@@ -82,7 +102,7 @@ class MyTweepyApi:
                 self.get_btc_tweets()
             )
             # save results
-            save_task_results(results)
+            save_task_results(price, results)
             await asyncio.sleep(self.every)
 
         else:
