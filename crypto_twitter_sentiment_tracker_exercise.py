@@ -1,6 +1,6 @@
 import asyncio
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta, timezone
 from typing import List, TypeVar
 from urllib.request import urlopen
@@ -38,8 +38,11 @@ def save_task_results(price: float, tweets: List[Tweet]):
         sentiments.append(likes + retweets * 2)
 
     last_min_sentiment = sum(sentiments) / len(tweets)
-    t_result = TaskResult(utc_now(), price, tweets, last_min_sentiment)
-    # TODO: save to a db
+    tweets_as_json = list(map(lambda t: t._json, last_min_tweets))
+    t_result = TaskResult(utc_now(), price, json.dumps(tweets_as_json), last_min_sentiment)
+    with open('db.json', 'w') as db:
+        db.writelines(json.dumps(asdict(t_result)))
+
 
 
 @dataclass
