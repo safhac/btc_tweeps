@@ -8,7 +8,7 @@ import tweepy  # using version 4.1.0
 
 # UTC
 utc_now = lambda: datetime.utcnow().replace(tzinfo=timezone.utc)
-
+time_format = '%D-%M-%Y:%H:%M:%S'
 URL = "https://financialmodelingprep.com/api/v3/quote/BTCUSD?apikey=9c33655ac70d040280297ef04cf3ceff"
 
 # Twitter OAuth Authentication
@@ -19,7 +19,6 @@ ACCESS_TOKEN = "1269644061079674888-NzGrf0MAEVl6fGDSTtpUTYJMNBezvb"
 ACCESS_TOKEN_SECRET = "ubqTldQLx7atDcXUwUlWJ8lLqx1wWkrkCKud97n6PswpN"
 
 Tweet = TypeVar("Tweet")
-
 
 def save_task_results(price: float, tweets: List[Tweet]) -> None:
     """
@@ -45,11 +44,10 @@ def save_task_results(price: float, tweets: List[Tweet]) -> None:
 
     tweets_as_json = list(map(lambda t: t._json, last_min_tweets))
 
-    t_result = TaskResult(now, price, tweets_as_json, last_min_sentiment)
+    t_result = TaskResult(now.strftime(time_format), price, tweets_as_json, last_min_sentiment)
 
     with open('db.json', 'w') as db:
-
-        db.writelines(json.dumps(asdict(t_result).__str__()))
+        db.writelines(json.dumps(asdict(t_result)))
 
 
 @dataclass
@@ -57,7 +55,7 @@ class TaskResult:
     """
     keep task results tidy
     """
-    time_stamp: datetime
+    time_stamp: str
     bitcoin_price: float
     last_min_tweets: List[Tweet]
     batch_sentiment_score: float
@@ -81,6 +79,7 @@ class MyTweepyApi:
         self.every = every
         self.until = until
         self.task = asyncio.create_task(self.periodic())
+        self.runs = 0
 
     async def start(self):
         await self.task
@@ -108,6 +107,8 @@ class MyTweepyApi:
 
     async def periodic(self) -> None:
         while utc_now() < self.until:
+            print(f'periodic run {self.runs}')
+            self.runs += 1
             price, results = await asyncio.gather(
                 self.get_btc_price(),
                 self.get_btc_tweets()
